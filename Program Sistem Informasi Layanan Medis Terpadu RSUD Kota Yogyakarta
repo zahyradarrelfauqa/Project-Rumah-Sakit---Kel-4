@@ -1,1 +1,309 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <limits>
+using namespace std;
+
+class Pasien {
+public:
+    string nama;
+    string nik;
+    int umur;
+    string password;
+
+    void tampilkanData() {
+        cout << "Nama       : " << nama << endl;
+        cout << "NIK        : " << nik << endl;
+        cout << "Umur       : " << umur << endl;
+    }
+};
+
+class RekamMedis {
+public:
+    string nik;
+    string diagnosis;
+    string tanggal;
+
+    void tampilkanRekam() {
+        cout << "Tanggal     : " << tanggal << endl;
+        cout << "Diagnosis   : " << diagnosis << endl;
+    }
+};
+
+class RawatInap {
+public:
+    string nik;
+    string ruangan;
+    string tanggalMasuk;
+    string tanggalKeluar;
+
+    void tampilkanRawat() {
+        cout << "Ruangan        : " << ruangan << endl;
+        cout << "Masuk          : " << tanggalMasuk << endl;
+        cout << "Keluar         : " << tanggalKeluar << endl;
+    }
+};
+
+vector<Pasien> daftarPasien;
+vector<RekamMedis> daftarRekamMedis;
+vector<RawatInap> daftarRawatInap;
+
+void clearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+// ---------------------- Penyimpanan dan Pemanggilan ----------------------------
+
+void simpanPasienKeFile() {
+    ofstream file("pasien.txt");
+    for (auto &p : daftarPasien) {
+        file << p.nama << "," << p.nik << "," << p.umur << "," << p.password << endl;
+    }
+    file.close();
+}
+
+void muatPasienDariFile() {
+    daftarPasien.clear();
+    ifstream file("pasien.txt");
+    string line;
+    while (getline(file, line)) {
+        Pasien p;
+        size_t pos1 = line.find(",");
+        size_t pos2 = line.find(",", pos1 + 1);
+        size_t pos3 = line.find(",", pos2 + 1);
+        p.nama = line.substr(0, pos1);
+        p.nik = line.substr(pos1 + 1, pos2 - pos1 - 1);
+        p.umur = stoi(line.substr(pos2 + 1, pos3 - pos2 - 1));
+        p.password = line.substr(pos3 + 1);
+        daftarPasien.push_back(p);
+    }
+    file.close();
+}
+
+void simpanRekamMedisKeFile() {
+    ofstream file("rekam_medis.txt");
+    for (auto &r : daftarRekamMedis) {
+        file << r.nik << "," << r.tanggal << "," << r.diagnosis << endl;
+    }
+    file.close();
+}
+
+void muatRekamMedisDariFile() {
+    daftarRekamMedis.clear();
+    ifstream file("rekam_medis.txt");
+    string line;
+    while (getline(file, line)) {
+        RekamMedis r;
+        size_t pos1 = line.find(",");
+        size_t pos2 = line.find(",", pos1 + 1);
+        r.nik = line.substr(0, pos1);
+        r.tanggal = line.substr(pos1 + 1, pos2 - pos1 - 1);
+        r.diagnosis = line.substr(pos2 + 1);
+        daftarRekamMedis.push_back(r);
+    }
+    file.close();
+}
+
+void simpanRawatInapKeFile() {
+    ofstream file("rawat_inap.txt");
+    for (auto &r : daftarRawatInap) {
+        file << r.nik << "," << r.ruangan << "," << r.tanggalMasuk << "," << r.tanggalKeluar << endl;
+    }
+    file.close();
+}
+
+void muatRawatInapDariFile() {
+    daftarRawatInap.clear();
+    ifstream file("rawat_inap.txt");
+    string line;
+    while (getline(file, line)) {
+        RawatInap r;
+        size_t pos1 = line.find(",");
+        size_t pos2 = line.find(",", pos1 + 1);
+        size_t pos3 = line.find(",", pos2 + 1);
+        r.nik = line.substr(0, pos1);
+        r.ruangan = line.substr(pos1 + 1, pos2 - pos1 - 1);
+        r.tanggalMasuk = line.substr(pos2 + 1, pos3 - pos2 - 1);
+        r.tanggalKeluar = line.substr(pos3 + 1);
+        daftarRawatInap.push_back(r);
+    }
+    file.close();
+}
+
+// -------------------------- Fitur Aplikasi ----------------------------------
+
+void registrasiPasien() {
+    Pasien p;
+    cout << "\n=== REGISTRASI PASIEN ===\n";
+    cout << "Nama lengkap: ";
+    getline(cin, p.nama);
+    cout << "NIK         : ";
+    getline(cin, p.nik);
+    cout << "Umur        : ";
+    cin >> p.umur;
+    clearInput();
+    cout << "Password    : ";
+    getline(cin, p.password);
+
+    daftarPasien.push_back(p);
+    simpanPasienKeFile();
+    cout << ">> Registrasi berhasil!\n";
+}
+
+Pasien* loginPasien() {
+    string nikInput, passInput;
+    cout << "\n=== LOGIN PASIEN ===\n";
+    cout << "NIK     : ";
+    getline(cin, nikInput);
+    cout << "Password: ";
+    getline(cin, passInput);
+
+    for (auto &p : daftarPasien) {
+        if (p.nik == nikInput && p.password == passInput) {
+            cout << ">> Login berhasil. Selamat datang, " << p.nama << "!\n";
+            return &p;
+        }
+    }
+    cout << ">> Login gagal. NIK atau password salah.\n";
+    return nullptr;
+}
+
+void tambahRekamMedis(const string &nik) {
+    RekamMedis r;
+    r.nik = nik;
+    cout << "\n=== INPUT REKAM MEDIS ===\n";
+    cout << "Tanggal (dd-mm-yyyy): ";
+    getline(cin, r.tanggal);
+    cout << "Diagnosis           : ";
+    getline(cin, r.diagnosis);
+
+    daftarRekamMedis.push_back(r);
+    simpanRekamMedisKeFile();
+    cout << ">> Rekam medis berhasil disimpan.\n";
+}
+
+void lihatRekamMedis(const string &nik) {
+    cout << "\n=== DATA REKAM MEDIS ===\n";
+    bool ditemukan = false;
+    for (auto &r : daftarRekamMedis) {
+        if (r.nik == nik) {
+            r.tampilkanRekam();
+            cout << "---------------------\n";
+            ditemukan = true;
+        }
+    }
+    if (!ditemukan) {
+        cout << ">> Tidak ada data rekam medis.\n";
+    }
+}
+
+void tambahRawatInap(const string &nik) {
+    RawatInap r;
+    r.nik = nik;
+    cout << "\n=== INPUT DATA RAWAT INAP ===\n";
+    cout << "Ruangan           : ";
+    getline(cin, r.ruangan);
+    cout << "Tanggal Masuk     : ";
+    getline(cin, r.tanggalMasuk);
+    cout << "Tanggal Keluar    : ";
+    getline(cin, r.tanggalKeluar);
+
+    daftarRawatInap.push_back(r);
+    simpanRawatInapKeFile();
+    cout << ">> Data rawat inap berhasil disimpan.\n";
+}
+
+void lihatRawatInap(const string &nik) {
+    cout << "\n=== DATA RAWAT INAP ===\n";
+    bool ditemukan = false;
+    for (auto &r : daftarRawatInap) {
+        if (r.nik == nik) {
+            r.tampilkanRawat();
+            cout << "---------------------\n";
+            ditemukan = true;
+        }
+    }
+    if (!ditemukan) {
+        cout << ">> Tidak ada data rawat inap.\n";
+    }
+}
+
+void menuPasien(Pasien *pasien) {
+    int pilihan;
+    do {
+        cout << "\n=== MENU PASIEN ===\n";
+        cout << "1. Lihat Profil\n";
+        cout << "2. Tambah Rekam Medis\n";
+        cout << "3. Lihat Rekam Medis\n";
+        cout << "4. Tambah Rawat Inap\n";
+        cout << "5. Lihat Rawat Inap\n";
+        cout << "0. Logout\n";
+        cout << "Pilihan: ";
+        cin >> pilihan;
+        clearInput();
+        switch (pilihan) {
+            case 1:
+                pasien->tampilkanData();
+                break;
+            case 2:
+                tambahRekamMedis(pasien->nik);
+                break;
+            case 3:
+                lihatRekamMedis(pasien->nik);
+                break;
+            case 4:
+                tambahRawatInap(pasien->nik);
+                break;
+            case 5:
+                lihatRawatInap(pasien->nik);
+                break;
+            case 0:
+                cout << ">> Logout berhasil.\n";
+                break;
+            default:
+                cout << ">> Pilihan tidak valid.\n";
+        }
+    } while (pilihan != 0);
+}
+
+void tampilkanDashboard() {
+    cout << "\n=== SISTEM INFORMASI RSUD KOTA YOGYAKARTA ===\n";
+    cout << "1. Registrasi Pasien\n";
+    cout << "2. Login Pasien\n";
+    cout << "0. Keluar\n";
+    cout << "Pilihan: ";
+}
+
+int main() {
+    muatPasienDariFile();
+    muatRekamMedisDariFile();
+    muatRawatInapDariFile();
+
+    int pilihan;
+    do {
+        tampilkanDashboard();
+        cin >> pilihan;
+        clearInput();
+        switch (pilihan) {
+            case 1:
+                registrasiPasien();
+                break;
+            case 2: {
+                Pasien* p = loginPasien();
+                if (p != nullptr)
+                    menuPasien(p);
+                break;
+            }
+            case 0:
+                cout << ">> Terima kasih telah menggunakan sistem ini.\n";
+                break;
+            default:
+                cout << ">> Pilihan tidak valid.\n";
+        }
+    } while (pilihan != 0);
+
+    return 0;
+}
 
